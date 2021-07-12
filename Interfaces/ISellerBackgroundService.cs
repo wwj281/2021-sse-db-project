@@ -18,7 +18,7 @@ namespace InternetMall.Interfaces
         public Task<List<Coupon>> DisplayCoupon(string couponID);//显示优惠券
         public Task<List<Shop>> ChooseShop(string sellerID);//选择店铺
         public Task<string> DisplayBriefOrder(string shopID);//显示简略订单信息
-        public Task<SellerDetailedOrder> DisplayDetailedOrder(string orderID);//显示订单详情
+        public Task<SellerDetailedOrderView> DisplayDetailedOrder(string orderID);//显示订单详情
         public Task<List<Order>> SearchOrder(string orderId = null, string commodityId = null, string commodityName = null, string recieverName = null, string receiverPhone = null, string sellerId = null);//搜索订单
         public Task<List<Order>> FilterOrder(int orderStatus);//筛选订单
 

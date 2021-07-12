@@ -13,9 +13,12 @@ namespace Internetmall.Services
 {
     public class HomeService : IHomeService
     {
-        static int GetRandomSeedbyGuid()
+        static int GetRandomSeed()
         {
-            return new Guid().GetHashCode();
+            byte[] bytes = new byte[4];
+            System.Security.Cryptography.RNGCryptoServiceProvider rng = new System.Security.Cryptography.RNGCryptoServiceProvider();
+            rng.GetBytes(bytes);
+            return BitConverter.ToInt32(bytes, 0);
         }
         private readonly ModelContext _context;
 
@@ -27,7 +30,7 @@ namespace Internetmall.Services
         //按登录状态推荐商品
         public async Task<List<Good>> RecommendingCommodities(bool inFo = false, string buyerId = null)
         {
-            Random random = new Random(GetRandomSeedbyGuid());
+            Random random = new Random(GetRandomSeed());
             List<Commodity> tempResultList = new List<Commodity>();
             List<Good> goods = new List<Good>();
             if (inFo == true)
@@ -53,19 +56,19 @@ namespace Internetmall.Services
                     int commodityCotegory = (int)newShoppingCart.Commodity.Category;//对于订单中遍历到的的商品种类，其权重加2
                     judge1[commodityCotegory] += 2;
                 }
-                int[] judge2 = new int[6];
+                int[] judge2 = new int[7];
                 for (int i = 1; i <= 6; i++)//找出权重最大的前六种商品种类，记录在judge2数组中
                 {
-                    int maxIndex = 1;
-                    for (int j = 2; j < 10; j++)
+                    int maxIndex = i;
+                    for (int j = 0; j < 10; j++)
                     {
                         if (judge1[j] > judge1[maxIndex])
                         {
                             maxIndex = j;
                         }
                     }
-                    judge2[i] = judge1[maxIndex];
-                    judge1[maxIndex] = 0;
+                    judge2[i] = maxIndex;
+                    judge1[maxIndex] = -1;
                 }
                 for (int i = 1; i <= 6; i++)
                 {
@@ -98,7 +101,7 @@ namespace Internetmall.Services
         //按分区推荐商品
         public async Task<List<Good>> RecommendingZoneCommodities(int commodityCategory = -1)
         {
-            Random random = new Random(GetRandomSeedbyGuid());
+            Random random = new Random(GetRandomSeed());
             List<Commodity> tempResultList = new List<Commodity>();
             List<Good> goods = new List<Good>();
             if (commodityCategory != -1)

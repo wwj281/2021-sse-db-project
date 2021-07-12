@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Internetmall.Models
 {
-    public class SellerDetailedOrder
+    public class SellerDetailedOrderView
     {
         public string buyerJson { get; set; }
         public string sellerJson { get; set; }

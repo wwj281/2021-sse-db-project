@@ -134,7 +134,7 @@ namespace InternetMall.Services
         //显示简略订单信息
         public async Task<string> DisplayBriefOrder(string shopId)
         {
-            List<SellerBriefOrder> newOrderList = new List<SellerBriefOrder>();
+            List<SellerBriefOrderView> newOrderList = new List<SellerBriefOrderView>();
             if (shopId == null)
             {
                 return null;
@@ -149,7 +149,7 @@ namespace InternetMall.Services
                 foreach(Order newOrder in modelContext)
                 {
                     decimal? orderPrice=0;
-                    SellerBriefOrder briefOrder = new SellerBriefOrder();
+                    SellerBriefOrderView briefOrder = new SellerBriefOrderView();
                     briefOrder.buyerNickname = newOrder.Buyer.Nickname;
                     briefOrder.url = newOrder.Buyer.Url;
                     foreach(OrdersCommodity newCommodity in newOrder.OrdersCommodities)
@@ -165,9 +165,9 @@ namespace InternetMall.Services
 
         }
         //显示订单详情
-        public async Task<SellerDetailedOrder> DisplayDetailedOrder(string orderID)
+        public async Task<SellerDetailedOrderView> DisplayDetailedOrder(string orderID)
         {
-            SellerDetailedOrder returnJson = new SellerDetailedOrder();
+            SellerDetailedOrderView returnJson = new SellerDetailedOrderView();
             if (orderID == null)
             {
                 return null;
