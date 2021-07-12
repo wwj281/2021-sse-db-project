@@ -125,5 +125,44 @@ namespace Internetmall.Services
             }
             else return null;
         }
+        //排行榜
+        public List<rankView> Rank(int commodityCategory = -1)
+        {
+            int[] tempCommodities = new int[10];
+            int[] resultcommodities = new int[10];
+            List<rankView> rankList = new List<rankView>();
+            if (commodityCategory != -1)
+            {
+                List<OrdersCommodity> orderCommoditiesList = _context.OrdersCommodities.Where(o => o.Commodity.Category == commodityCategory).Include(o => o.Commodity).ToList();
+                foreach(OrdersCommodity neworderCommodity in orderCommoditiesList)
+                {
+                    int tempCommodityId = int.Parse(neworderCommodity.Commodity.CommodityId);
+                    tempCommodities[tempCommodityId]++;
+                }
+                for(int i=0;i<10;i++)
+                {
+                    int maxIndex = i;
+                    for(int j=1;j<10;j++)
+                    {
+                        if (tempCommodities[j] > tempCommodities[maxIndex])
+                        {
+                            maxIndex = j;
+                        }    
+                    }
+                    resultcommodities[i] = maxIndex;
+                    tempCommodities[maxIndex] = -1;
+                }
+                for (int i = 0; i < 10; i++)
+                {
+                    Commodity tempCommodity = _context.Commodities.FirstOrDefault(c => c.CommodityId == resultcommodities[i].ToString());
+                    rankView tempRank = new rankView();
+                    tempRank.commodityId = tempCommodity.CommodityId;
+                    tempRank.commodityName = tempCommodity.Name;
+                    rankList.Add(tempRank);
+                }
+                return rankList;
+            }
+            else return null;
+        }
     }
 }
