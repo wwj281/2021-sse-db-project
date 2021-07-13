@@ -2,13 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Internetmall.Models;
-using Internetmall.Models.BusinessEntity;
 using InternetMall.DBContext;
 using InternetMall.Interfaces;
 using InternetMall.Models;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 
 namespace InternetMall.Services
 {
@@ -131,59 +128,15 @@ namespace InternetMall.Services
             var modelContext = await _context.Shops.Where(s => s.SellerId == sellerId).Include(s => s.Seller).ToListAsync();
             return modelContext;
         }
-        //显示简略订单信息
-        public async Task<string> DisplayBriefOrder(string shopId)
+        //展示订单
+        public async Task<List<Order>> DisplayOrder(string shopId)
         {
-            List<SellerBriefOrderView> newOrderList = new List<SellerBriefOrderView>();
             if (shopId == null)
             {
                 return null;
             }
-            else
-            {
-                var modelContext = await _context.Orders.Where(o => o.ShopId == shopId)
-                                                    .Include(o => o.Buyer)
-                                                    .Include(o => o.Shop)
-                                                    .Include(o => o.OrdersCommodities)
-                                                       .ThenInclude(c => c.Commodity).ToListAsync();
-                foreach(Order newOrder in modelContext)
-                {
-                    decimal? orderPrice=0;
-                    SellerBriefOrderView briefOrder = new SellerBriefOrderView();
-                    briefOrder.buyerNickname = newOrder.Buyer.Nickname;
-                    briefOrder.url = newOrder.Buyer.Url;
-                    foreach(OrdersCommodity newCommodity in newOrder.OrdersCommodities)
-                    {
-                        orderPrice = orderPrice + newCommodity.Commodity.Price;
-                    }
-                    briefOrder.price = orderPrice;
-                    briefOrder.date = newOrder.OrdersDate;
-                    newOrderList.Add(briefOrder);
-                }
-            }
-            return JsonConvert.SerializeObject(newOrderList);
-
-        }
-        //显示订单详情
-        public async Task<SellerDetailedOrderView> DisplayDetailedOrder(string orderID)
-        {
-            SellerDetailedOrderView returnJson = new SellerDetailedOrderView();
-            if (orderID == null)
-            {
-                return null;
-            }
-            else {
-                var modelContext = await _context.Orders.Where(o => o.OrdersId == orderID)
-                                                        .Include(o => o.Buyer)
-                                                        .Include(o => o.Shop)
-                                                        .Include(o => o.OrdersCommodities)
-                                                           .ThenInclude(c => c.Commodity).FirstOrDefaultAsync();
-                returnJson.buyerJson = JsonConvert.SerializeObject(modelContext.Buyer);
-                returnJson.sellerJson = JsonConvert.SerializeObject(modelContext.Shop.Seller);
-                returnJson.ReceiveInformationJson= JsonConvert.SerializeObject(modelContext.Shop.Seller);
-                returnJson.commodityJson= JsonConvert.SerializeObject(modelContext.OrdersCommodities);
-            }
-            return returnJson;
+            var modelContext = await _context.Orders.Where(o => o.ShopId == shopId).Include(o => o.Buyer).Include(o => o.Received).Include(o => o.Shop).ToListAsync();
+            return modelContext;
         }
         //搜索订单
         public async Task<List<Order>> SearchOrder(string orderId, string commodityId, string commodityName, string recieverName, string recieverPhone, string buyerId)
@@ -234,13 +187,6 @@ namespace InternetMall.Services
                 }
             }
             return newList;
-        }
-        public async Task<List<Order>> FilterOrder(int orderStatus)
-        {
-            var modelContext = await _context.Orders.Where(o => o.Status == orderStatus).Include(o => o.Buyer)
-                                                    .Include(o => o.Received)
-                                                    .Include(o => o.Shop).ToListAsync();
-            return modelContext;
         }
     }
 }

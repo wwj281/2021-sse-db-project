@@ -20,6 +20,7 @@ namespace Internetmall.Services
             rng.GetBytes(bytes);
             return BitConverter.ToInt32(bytes, 0);
         }
+
         private readonly ModelContext _context;
 
         public HomeService(ModelContext context)
@@ -36,7 +37,7 @@ namespace Internetmall.Services
             if (inFo == true)
             {
                 int[] judge1 = new int[10];//对于十个商品大类进行权重标记的数组
-                List<Order> orderList = _context.Orders.Where(o => o.BuyerId == buyerId).OrderByDescending(c => c.OrdersDate).Include(o => o.OrdersCommodities).ToList();//按时间对订单队列进行降序排序
+                List<Order> orderList =  _context.Orders.Where(o => o.BuyerId == buyerId).OrderByDescending(c => c.OrdersDate).Include(o => o.OrdersCommodities).ToList();//按时间对订单队列进行降序排序
                 int count = 0;
                 orderList.Sort();
                 foreach (Order newOrder in orderList)//遍历该用户的最近的五个订单，若订单数少于五个则遍历所有订单
@@ -50,7 +51,7 @@ namespace Internetmall.Services
                         judge1[commodityCotegory]++;//对于订单中遍历到的的商品种类，其权重加1
                     }
                 }
-                List<AddShoppingCart> shoppingCartList = _context.AddShoppingCarts.Where(a => a.BuyerId == buyerId).ToList();
+                List<AddShoppingCart> shoppingCartList =  _context.AddShoppingCarts.Where(a => a.BuyerId == buyerId).ToList();
                 foreach (AddShoppingCart newShoppingCart in shoppingCartList)//遍历该用户购物车中的所有商品
                 {
                     int commodityCotegory = (int)newShoppingCart.Commodity.Category;//对于订单中遍历到的的商品种类，其权重加2
@@ -60,7 +61,7 @@ namespace Internetmall.Services
                 for (int i = 1; i <= 6; i++)//找出权重最大的前六种商品种类，记录在judge2数组中
                 {
                     int maxIndex = i;
-                    for (int j = 0; j < 10; j++)
+                    for (int j = 2; j < 10; j++)
                     {
                         if (judge1[j] > judge1[maxIndex])
                         {
@@ -68,12 +69,12 @@ namespace Internetmall.Services
                         }
                     }
                     judge2[i] = maxIndex;
-                    judge1[maxIndex] = -1;
+                    judge1[maxIndex] = -1;//0;
                 }
                 for (int i = 1; i <= 6; i++)
                 {
                     List<Commodity> commoditiesList =  _context.Commodities.Where(c => c.Category == judge2[i]).Include(c => c.Shop).Include(c => c.OrdersCommodities).ToList();
-                    int temp = random.Next(0, commoditiesList.Capacity-1);
+                    int temp = random.Next(0, commoditiesList.Count-1);
                     tempResultList.Add(commoditiesList[temp]);
                 }
             }
@@ -81,9 +82,9 @@ namespace Internetmall.Services
             {
                 for (int i = 0; i < 6; i++)
                 {
-                    int randCategory = random.Next(0, 9);
-                    List<Commodity> commoditiesList = _context.Commodities.Where(c => c.Category == randCategory).Include(c => c.Shop).Include(c => c.OrdersCommodities).ToList();
-                    int temp = random.Next(0, commoditiesList.Capacity - 1);
+                    int randCategory = random.Next(1, 9);
+                    List<Commodity> commoditiesList =  _context.Commodities.Where(c => c.Category == randCategory).Include(c => c.Shop).Include(c => c.OrdersCommodities).ToList();
+                    int temp = random.Next(0, commoditiesList.Count - 1);
                     tempResultList.Add(commoditiesList[temp]);
                 }
             }
@@ -94,12 +95,13 @@ namespace Internetmall.Services
                 newGood.intro = newCommodity.Name;
                 newGood.shop = newCommodity.Shop.Name;
                 newGood.ID = newCommodity.CommodityId;
+                newGood.price = newCommodity.Price;
                 goods.Add(newGood);
             }
             return goods;
         }
         //按分区推荐商品
-        public List<Good> RecommendingZoneCommodities(int commodityCategory = -1)
+        public  List<Good> RecommendingZoneCommodities(int commodityCategory = -1)
         {
             Random random = new Random(GetRandomSeedbyGuid());
             List<Commodity> tempResultList = new List<Commodity>();
@@ -109,7 +111,7 @@ namespace Internetmall.Services
                 List<Commodity> commoditiesList =  _context.Commodities.Where(c => c.Category == commodityCategory).Include(c => c.Shop).Include(c => c.OrdersCommodities).ToList();
                 for (int i = 0; i < 8; i++)
                 {
-                    int temp = random.Next(0, commoditiesList.Capacity - 1);
+                    int temp = random.Next(0, commoditiesList.Count - 1);
                     tempResultList.Add(commoditiesList[temp]);
                 }
                 foreach (Commodity newCommodity in tempResultList)
@@ -119,38 +121,23 @@ namespace Internetmall.Services
                     newGood.intro = newCommodity.Name;
                     newGood.shop = newCommodity.Shop.Name;
                     newGood.ID = newCommodity.CommodityId;
+                    newGood.price = newCommodity.Price;
                     goods.Add(newGood);
                 }
                 return goods;
             }
             else return null;
         }
-        //排行榜
-        public List<rankView> Rank(int commodityCategory = -1)
+        public List<rankView> Rank(int commodityCategory = -1)   //产生排行榜文件
         {
-            int[] tempCommodities = new int[10];
             int[] resultcommodities = new int[10];
             List<rankView> rankList = new List<rankView>();
             if (commodityCategory != -1)
             {
-                List<OrdersCommodity> orderCommoditiesList = _context.OrdersCommodities.Where(o => o.Commodity.Category == commodityCategory).Include(o => o.Commodity).ToList();
-                foreach(OrdersCommodity neworderCommodity in orderCommoditiesList)
+                List<Commodity> commoditiesList = _context.Commodities.Where(c => c.Category == commodityCategory).OrderBy(c => c.Soldnum).ToList();
+                for (int i = 0; i < 10; i++)
                 {
-                    int tempCommodityId = int.Parse(neworderCommodity.Commodity.CommodityId);
-                    tempCommodities[tempCommodityId]++;
-                }
-                for(int i=0;i<10;i++)
-                {
-                    int maxIndex = i;
-                    for(int j=1;j<10;j++)
-                    {
-                        if (tempCommodities[j] > tempCommodities[maxIndex])
-                        {
-                            maxIndex = j;
-                        }    
-                    }
-                    resultcommodities[i] = maxIndex;
-                    tempCommodities[maxIndex] = -1;
+                    resultcommodities[i] = int.Parse(commoditiesList[i].CommodityId);
                 }
                 for (int i = 0; i < 10; i++)
                 {
