@@ -12,6 +12,7 @@ namespace Internetmall.Models.BusinessEntity
         public string shop { get; set; }
         public string ID { get; set; }
         public string description { get; set; }
+        public int Soldnum { get; set; }
         public decimal? price { get; set; }
     }
 }
